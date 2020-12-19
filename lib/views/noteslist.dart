@@ -2,8 +2,16 @@ import 'package:api_using_flutter/models/Notes.dart';
 import 'package:flutter/material.dart';
 
 class NotesList extends StatelessWidget {
-  final notes = [new Notes(title: "Note1", createdateTime: DateTime.now(), editeddateTime: DateTime.now())];
+  final notes = [
+    new Notes(title: "Note1", createdateTime: DateTime.now(), editeddateTime: DateTime.now()),
+    new Notes(title: "Note1", createdateTime: DateTime.now(), editeddateTime: DateTime.now()),
+    new Notes(title: "Note1", createdateTime: DateTime.now(), editeddateTime: DateTime.now())
+  ];
 
+  String formatDate(DateTime dateTime)
+  {
+    return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,16 +26,16 @@ class NotesList extends StatelessWidget {
             itemBuilder: (_, index) {
               return ListTile(
                 title: Text(
-                  'Hello',
+                  notes[index].title,
                   style: TextStyle(color: Theme.of(context).primaryColor),
                 ),
-                subtitle: Text('Last edited on'),
+                subtitle: Text('Last edited on ${formatDate(notes[index].editeddateTime)}'),
               );
             },
             separatorBuilder: (_, __) => Divider(
                   height: 1,
                   color: Colors.green,
                 ),
-            itemCount: 30));
+            itemCount: notes.length));
   }
 }
