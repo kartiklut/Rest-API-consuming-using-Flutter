@@ -1,4 +1,5 @@
 import 'package:api_using_flutter/models/Notes.dart';
+import 'package:api_using_flutter/views/modifynotes.dart';
 import 'package:flutter/material.dart';
 
 class NotesList extends StatelessWidget {
@@ -8,10 +9,10 @@ class NotesList extends StatelessWidget {
     new Notes(title: "Note1", createdateTime: DateTime.now(), editeddateTime: DateTime.now())
   ];
 
-  String formatDate(DateTime dateTime)
-  {
+  String formatDate(DateTime dateTime) {
     return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,7 +20,9 @@ class NotesList extends StatelessWidget {
           title: Text('List of Notes'),
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => ModifyNotes()));
+          },
           child: Icon(Icons.add),
         ),
         body: ListView.separated(
