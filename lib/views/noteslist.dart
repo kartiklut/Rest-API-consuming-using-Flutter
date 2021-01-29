@@ -1,3 +1,4 @@
+import 'package:api_using_flutter/models/ApiResponse.dart';
 import 'package:api_using_flutter/models/Notes.dart';
 import 'package:get_it/get_it.dart';
 
@@ -13,8 +14,8 @@ class NotesList extends StatefulWidget {
 
 class _NotesListState extends State<NotesList> {
   NotesService get service => GetIt.I<NotesService>();
-
-  List<Notes> notes=[];
+  ApiResponse<List<Notes>> _apiResponse;
+  bool _isLoading = false;
 
   String formatDate(DateTime dateTime) {
     return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
@@ -22,10 +23,21 @@ class _NotesListState extends State<NotesList> {
 
   @override
   void initState() {
-    notes=service.getNotesList();
+    _fetchNotes();
     super.initState();
   }
 
+  _fetchNotes() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    _apiResponse = await service.getNotesList();
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,46 +51,60 @@ class _NotesListState extends State<NotesList> {
           },
           child: Icon(Icons.add),
         ),
-        body: ListView.separated(
-            itemBuilder: (_, index) {
-              return Dismissible(
-                key: ValueKey(notes[index].id),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  color: Colors.red,
-                  padding: EdgeInsets.only(left: 16),
-                  child: Align(
-                    child: Icon(
-                      Icons.delete,
-                      color: Colors.white,
-                    ),
-                    alignment: Alignment.centerRight,
-                  ),
-                ),
-                onDismissed: (direction) {},
-                confirmDismiss: (direction) async {
-                  final result = await showDialog(context: context, builder: (_) => DeleteNoteAlert());
-                  return result;
-                },
-                child: ListTile(
-                  title: Text(
-                    notes[index].title,
-                    style: TextStyle(color: Theme.of(context).primaryColor),
-                  ),
-                  subtitle: Text('Last edited on ${formatDate(notes[index].editeddateTime)}'),
-                  onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => ModifyNotes(
-                              noteId: notes[index].id,
-                            )));
-                  },
-                ),
+        body: Builder(
+          builder: (_) {
+            if (_isLoading) {
+              return CircularProgressIndicator();
+            }
+
+            if (_apiResponse.error) {
+              return Center(
+                child: Text(_apiResponse.errorMessage),
               );
-            },
-            separatorBuilder: (_, __) => Divider(
-                  height: 1,
-                  color: Colors.green,
-                ),
-            itemCount: notes.length));
+            }
+            return ListView.separated(
+                itemBuilder: (_, index) {
+                  return Dismissible(
+                    key: ValueKey(_apiResponse.data[index].id),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      color: Colors.red,
+                      padding: EdgeInsets.only(left: 16),
+                      child: Align(
+                        child: Icon(
+                          Icons.delete,
+                          color: Colors.white,
+                        ),
+                        alignment: Alignment.centerRight,
+                      ),
+                    ),
+                    onDismissed: (direction) {},
+                    confirmDismiss: (direction) async {
+                      final result = await showDialog(context: context, builder: (_) => DeleteNoteAlert());
+                      return result;
+                    },
+                    child: ListTile(
+                      title: Text(
+                        _apiResponse.data[index].title,
+                        style: TextStyle(color: Theme.of(context).primaryColor),
+                      ),
+                      subtitle:
+                          Text('Last edited on ${formatDate(_apiResponse.data[index].editeddateTime ?? _apiResponse.data[index].createdateTime)}'),
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (_) => ModifyNotes(
+                                  noteId: _apiResponse.data[index].id,
+                                )));
+                      },
+                    ),
+                  );
+                },
+                separatorBuilder: (_, __) => Divider(
+                      height: 1,
+                      color: Colors.green,
+                    ),
+                itemCount: _apiResponse.data.length);
+          },
+        ));
   }
 }
